@@ -12,34 +12,31 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server {
 
     private static final Logger log = LogManager.getLogger(Server.class);
     private static final int DEFAULT_PORT = 8080;
-
-    public static void main(String[] args) throws IOException, InterruptedException {
-
+    private static final int THREAD_NUM = 10;
+    public static void main(String[] args) throws IOException {
         new Server().startListen(getValidPortParam(args));
     }
 
-
-    public void startListen(int port) throws IOException, InterruptedException {
-
-        try (ServerSocket socket = new ServerSocket(port)) {
+    public void startListen(int port) throws IOException {
+        ExecutorService threadPool = Executors.newFixedThreadPool(THREAD_NUM);
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
             log.info("Web server listening on port %d (press CTRL-C to quit)", port);
             while (true) {
-                TimeUnit.MILLISECONDS.sleep(1);
-                handle(socket);
+                Socket clientSocket = serverSocket.accept();
+                threadPool.submit(() -> handle(clientSocket));
             }
         }
     }
 
-    private static void handle(ServerSocket socket) {
-        try (Socket clientSocket = socket.accept();
-             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))
-        ) {
+    private static void handle(Socket clientSocket) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
             List<String> requestContent = new ArrayList<>();
             String temp = reader.readLine();
             while(temp != null && temp.length() > 0) {
@@ -51,8 +48,9 @@ public class Server {
             res.write(clientSocket.getOutputStream());
         } catch (IOException e) {
             log.error("IO Error", e);
+        } finally {
+            try { clientSocket.close(); } catch (IOException e) {}
         }
-
     }
 
     /**
