@@ -35,7 +35,7 @@ public class Server {
         }
     }
 
-    private static void handle(Socket clientSocket) {
+    public static void handle(Socket clientSocket) {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
             List<String> requestContent = new ArrayList<>();
             String temp = reader.readLine();
