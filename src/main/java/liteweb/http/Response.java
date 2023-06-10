@@ -126,4 +126,11 @@ public class Response {
             log.error("ContentType not found:", e);
         }
     }
+
+    public int getContentLength() {
+        if (body == null) {
+            return 0;
+        }
+        return body.length;
+    }
 }

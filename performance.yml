@@ -9,13 +9,9 @@ scenarios:
     retrieve-resources: false
     requests:
       - url: http://127.0.0.1:8080
-        think-time: 1s
       - url: http://127.0.0.1:8080/readme.md
-        think-time: 1s
       - url: http://127.0.0.1:8080/src/main/java/liteweb/Server.java
-        think-time: 1s
       - url: http://127.0.0.1:8080/performance.yml
-        think-time: 1s
 
 reporting:
   - module: final-stats
