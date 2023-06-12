@@ -11,7 +11,7 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,8 +25,14 @@ public class Server {
     private static final int DEFAULT_PORT = 8080;
     private static final int THREAD_NUM = 20;
     private static final int BACKLOG_COUNT = 60;
-    private static Map<String, Response> cache = new ConcurrentHashMap<>(3);
-
+    private static final int MAX_ENTRIES = 3;
+    private static final int MAX_RESPONSE_SIZE = 1048576;
+    private static Map<String, Response> cache = new LinkedHashMap<String, Response>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, Response> eldest) {
+            return size() > MAX_ENTRIES;
+        }
+    };
     public static void main(String[] args) throws IOException, InterruptedException {
         new Server().startListen(getValidPortParam(args));
     }
@@ -55,22 +61,15 @@ public class Server {
             }
             Request req = new Request(requestContent);
             String uri = req.getUri();
-            if (cache.containsKey(uri)) {
+            Response res = cache.get(uri);
+            if (res != null) {
                 // If response is in cache, write it directly to output stream
-                Response cachedRes = cache.get(uri);
-                cachedRes.write(clientSocket.getOutputStream());
+                res.write(clientSocket.getOutputStream());
             } else {
                 // Generate a new response and add it to the cache if it's smaller than 1MB
-                Response res = new Response(req);
-                if (res.getContentLength() < 1048576) { // Only cache responses smaller than 1MB
+                res = new Response(req);
+                if (res.getContentLength() < MAX_RESPONSE_SIZE) {
                     cache.put(uri, res);
-                    // If the cache has more than 3 entries after adding the new response,
-                    // remove the least recently used entry
-                    if (cache.size() > 3) {
-                        Iterator<Map.Entry<String, Response>> iterator = cache.entrySet().iterator();
-                        iterator.next(); // skip the first (oldest) entry
-                        iterator.remove();
-                    }
                 }
                 res.write(clientSocket.getOutputStream());
             }
