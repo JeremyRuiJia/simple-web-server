@@ -1,5 +1,6 @@
 package liteweb;
 
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import liteweb.http.Request;
 import liteweb.http.Response;
 import org.apache.logging.log4j.LogManager;
@@ -11,9 +12,8 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -26,12 +26,10 @@ public class Server {
     private static final int BACKLOG_COUNT = 60;
     private static final int MAX_ENTRIES = 3;
     private static final int MAX_RESPONSE_SIZE = 1048576;
-    private static Map<String, Response> cache = new LinkedHashMap<String, Response>(16, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<String, Response> eldest) {
-            return size() > MAX_ENTRIES;
-        }
-    };
+    private static volatile ConcurrentMap<String, Response> cache = new ConcurrentLinkedHashMap.Builder<String, Response>()
+            .maximumWeightedCapacity(MAX_ENTRIES)
+            .build();
+
     public static void main(String[] args) throws IOException, InterruptedException {
         new Server().startListen(getValidPortParam(args));
     }
@@ -75,7 +73,10 @@ public class Server {
         } catch (IOException e) {
             log.error("IO Error", e);
         } finally {
-            try { clientSocket.close(); } catch (IOException e) {}
+            try {
+                clientSocket.close();
+            } catch (IOException e) {
+            }
         }
     }
 
