@@ -26,9 +26,11 @@ public class Server {
     private static final int BACKLOG_COUNT = 60;
     private static final int MAX_ENTRIES = 3;
     private static final int MAX_RESPONSE_SIZE = 1048576;
-    private static volatile ConcurrentMap<String, Response> cache = new ConcurrentLinkedHashMap.Builder<String, Response>()
+    /*private static volatile ConcurrentMap<String, Response> cache = new ConcurrentLinkedHashMap.Builder<String, Response>()
             .maximumWeightedCapacity(MAX_ENTRIES)
-            .build();
+            .build();*/
+    private static volatile LRUCache<String, Response> cache = new LRUCache<>(MAX_ENTRIES);
+
 
     public static void main(String[] args) throws IOException, InterruptedException {
         new Server().startListen(getValidPortParam(args));
