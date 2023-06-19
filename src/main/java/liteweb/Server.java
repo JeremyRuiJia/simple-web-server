@@ -29,7 +29,7 @@ public class Server {
     /*private static volatile ConcurrentMap<String, Response> cache = new ConcurrentLinkedHashMap.Builder<String, Response>()
             .maximumWeightedCapacity(MAX_ENTRIES)
             .build();*/
-    private static volatile LRUCache<String, Response> cache = new LRUCache<>(MAX_ENTRIES);
+    private static final LRUCache<String, Response> cache = new LRUCache<>(MAX_ENTRIES);
 
 
     public static void main(String[] args) throws IOException, InterruptedException {
