@@ -1,6 +1,5 @@
 package liteweb;
 
-import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import liteweb.http.Request;
 import liteweb.http.Response;
 import org.apache.logging.log4j.LogManager;
@@ -13,7 +12,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
