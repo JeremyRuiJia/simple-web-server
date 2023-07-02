@@ -32,7 +32,6 @@ public class ThreadSafeLRUCache<K, V> {
         lock.lock();
         try {
             while (cache.size() > capacity) {
-                System.out.println("Put thread will await");
                 notFull.await();
             }
             cache.put(key, value);
@@ -52,7 +51,6 @@ public class ThreadSafeLRUCache<K, V> {
                 if (cache.containsKey(key)) {
                     break;
                 }
-                System.out.println("Get thread will await");
                 notEmpty.await();
             }
             return cache.get(key);
