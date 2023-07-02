@@ -24,10 +24,7 @@ public class Server {
     private static final int BACKLOG_COUNT = 60;
     private static final int MAX_ENTRIES = 3;
     private static final int MAX_RESPONSE_SIZE = 1048576;
-    /*private static volatile ConcurrentMap<String, Response> cache = new ConcurrentLinkedHashMap.Builder<String, Response>()
-            .maximumWeightedCapacity(MAX_ENTRIES)
-            .build();*/
-    private static final LRUCache<String, Response> cache = new LRUCache<>(MAX_ENTRIES);
+    private static final ThreadSafeLRUCache<String, Response> cache = new ThreadSafeLRUCache<>(MAX_ENTRIES);
 
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -70,8 +67,8 @@ public class Server {
                 }
                 res.write(clientSocket.getOutputStream());
             }
-        } catch (IOException e) {
-            log.error("IO Error", e);
+        } catch (IOException | InterruptedException e) {
+            log.error("Error", e);
         } finally {
             try {
                 clientSocket.close();
