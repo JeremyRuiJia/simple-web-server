@@ -15,6 +15,9 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -70,5 +73,29 @@ class ServerTest {
 
         // Verify that the socket was closed
         assertEquals(true, socket.isClosed());
+    }
+
+    @Test
+    public void testThreadWait() throws InterruptedException {
+        ThreadSafeLRUCache<Integer, Integer> cache = new ThreadSafeLRUCache<>(5);
+
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+
+        for (int i = 0; i < 10; i++) {
+            executorService.submit(() -> {
+                try {
+                    cache.put((int) Thread.currentThread().getId(), 1);
+                    TimeUnit.MILLISECONDS.sleep(100);
+
+                    int value = cache.get((int) Thread.currentThread().getId());
+                    assertEquals(1, value);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        executorService.shutdown();
+        executorService.awaitTermination(1, TimeUnit.MINUTES);
     }
 }

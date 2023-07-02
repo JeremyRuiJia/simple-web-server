@@ -32,6 +32,7 @@ public class ThreadSafeLRUCache<K, V> {
         lock.lock();
         try {
             while (cache.size() > capacity) {
+                System.out.println("Put thread will await");
                 notFull.await();
             }
             cache.put(key, value);
@@ -47,14 +48,14 @@ public class ThreadSafeLRUCache<K, V> {
             if (!cache.containsKey(key)) {
                 return null; // or throw an exception, or return a default value
             }
-            while (!cache.containsKey(key)) {
+            while (true) {
+                if (cache.containsKey(key)) {
+                    break;
+                }
+                System.out.println("Get thread will await");
                 notEmpty.await();
             }
-            V value = cache.get(key);
-            cache.remove(key);
-            cache.put(key, value); // Move the accessed entry to the end of the map
-            notFull.signalAll();
-            return value;
+            return cache.get(key);
         } finally {
             lock.unlock();
         }
